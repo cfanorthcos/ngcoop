@@ -47,12 +47,16 @@
     border-radius:20px;
   }
   .brand{display:flex;align-items:center;gap:13px;position:relative;z-index:1;}
+  .logo-btn{background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;gap:13px;text-align:left;border-radius:12px;}
+  .logo-btn:focus-visible{outline:2px solid var(--focus);outline-offset:3px;}
   .brand .mark{
     width:44px;height:44px;border-radius:12px;
     background:linear-gradient(160deg, var(--accent), var(--accent-dark));
     display:flex;align-items:center;justify-content:center;flex-shrink:0;
     box-shadow: 0 4px 14px rgba(221,10,45,0.28);
+    transition:transform .12s ease;
   }
+  .logo-btn:hover .mark{transform:scale(1.05);}
   .brand .mark svg{width:24px;height:24px;}
   .brand h1{
     font-family:'Fredoka',sans-serif;font-size:24px;font-weight:600;
@@ -86,7 +90,7 @@
   .setup-card p{color:var(--ink-soft);line-height:1.55;}
 
   .admin-grid{display:grid;grid-template-columns:1fr;gap:18px;}
-  @media(min-width:760px){.admin-grid{grid-template-columns: 350px 1fr;align-items:start;}}
+  @media(min-width:760px){.admin-grid{grid-template-columns: 380px 1fr;align-items:start;}}
   .admin-form{padding:22px;}
   .admin-form h2, .admin-list h2{
     font-family:'Inter';font-size:12.5px;margin:0 0 16px;font-weight:700;
@@ -94,7 +98,7 @@
   }
   label.field{display:block;margin-bottom:15px;}
   label.field span{display:block;font-size:12.5px;font-weight:600;margin-bottom:7px;color:var(--ink);}
-  input[type=date],input[type=number],textarea,select{
+  input[type=date],input[type=number],input[type=text],textarea,select{
     width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 13px;
     font-family:'Inter';font-size:16px;color:var(--ink);background:var(--surface-2);
   }
@@ -118,6 +122,23 @@
   .btn-secondary:hover{background:var(--line);}
   .btn-danger-text{background:none;border:none;color:var(--pending);font-size:12.5px;font-weight:600;cursor:pointer;padding:4px 6px;opacity:.9;}
   .btn-danger-text:hover{opacity:1;}
+  .btn-sm{padding:8px 12px;font-size:12.5px;}
+
+  .item-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
+  .item-row{display:flex;gap:8px;align-items:center;}
+  .item-row select{flex:2;min-width:0;}
+  .item-row input[type=number]{flex:1;min-width:0;max-width:90px;}
+  .item-row .remove-item{
+    flex-shrink:0;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);
+    background:var(--surface-2);color:var(--pending);font-size:16px;font-weight:700;cursor:pointer;
+  }
+  .item-row .remove-item:hover{background:var(--pending-bg);}
+  .item-row .remove-item:disabled{opacity:.35;cursor:not-allowed;}
+  .add-item-btn{
+    background:none;border:1px dashed var(--line);color:var(--accent-dark);font-weight:700;font-size:13px;
+    padding:9px;border-radius:10px;cursor:pointer;width:100%;margin-bottom:16px;
+  }
+  .add-item-btn:hover{background:var(--accent-bg);border-color:var(--accent);}
 
   .admin-list{padding:22px;margin-top:0;}
   .order-row{
@@ -188,10 +209,10 @@
   .ticket.done{border-left-color:var(--complete);}
   .ticket:hover{transform:translateX(3px);}
   .ticket:focus-visible{outline:2px solid var(--focus);}
-  .ticket .tnum{font-family:'IBM Plex Mono';font-size:11px;color:var(--ink-soft);}
   .ticket .tmain{flex:1;min-width:0;}
   .ticket .ttype{font-weight:700;font-size:15px;color:var(--ink);}
-  .ticket .tnotes{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+  .ticket .titems{font-size:12.5px;color:var(--ink-soft);margin-top:3px;line-height:1.5;}
+  .ticket .tnotes{font-size:12.5px;color:var(--ink-soft);margin-top:2px;font-style:italic;}
   .ticket .tcases{font-family:'IBM Plex Mono';font-weight:700;font-size:19px;color:var(--ink);}
   .ticket .tcases small{display:block;font-size:9.5px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;font-family:'Inter';}
   .status-chip{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;}
@@ -199,20 +220,18 @@
   .status-chip.done{background:var(--complete-bg);color:var(--complete);}
 
   .detail-card{padding:24px;}
-  .detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px;}
-  .detail-head .num{font-family:'IBM Plex Mono';color:var(--ink-soft);font-size:12.5px;}
-  .type-pill{
-    display:inline-block;background:var(--surface-2);color:var(--ink);font-weight:700;font-size:13px;
-    padding:6px 14px;border-radius:20px;margin-bottom:18px;border:1px solid var(--line);
-  }
-  .need-box{
-    display:flex;align-items:center;justify-content:space-between;
-    background:var(--pending-bg);border:1px dashed var(--pending-line);border-radius:12px;
-    padding:18px;margin-bottom:18px;
-  }
-  .need-box.done{background:var(--complete-bg);border-color:var(--complete-line);}
-  .need-box .lab{font-size:12.5px;color:var(--ink-soft);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
-  .need-box .num-lg{font-family:'IBM Plex Mono';font-size:36px;font-weight:700;line-height:1;color:var(--ink);}
+  .detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px;}
+
+  .items-box{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:18px;}
+  .item-line{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:var(--pending-bg);border-bottom:1px solid var(--pending-line);}
+  .item-line:last-child{border-bottom:none;}
+  .items-box.done .item-line{background:var(--complete-bg);border-bottom-color:var(--complete-line);}
+  .item-line .itype{font-weight:600;font-size:14.5px;color:var(--ink);}
+  .item-line .icases{font-family:'IBM Plex Mono';font-weight:700;font-size:16px;color:var(--ink);}
+  .item-total{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:var(--surface-2);}
+  .item-total .lab{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);}
+  .item-total .num-lg{font-family:'IBM Plex Mono';font-size:22px;font-weight:700;color:var(--ink);}
+
   .order-notes{font-size:13.5px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:11px 13px;margin-bottom:18px;border:1px solid var(--line);}
   .divider{height:1px;background:var(--line);margin:20px 0;}
   .completed-banner{
@@ -242,7 +261,6 @@
     .brand h1{font-size:19px;}
     .brand p{font-size:11px;}
     .brand .mark{width:38px;height:38px;}
-    .need-box .num-lg{font-size:30px;}
     .cal-grid{gap:4px;}
     .cal-cell{border-radius:8px;}
     .cal-dow{font-size:9.5px;}
@@ -255,7 +273,7 @@
 <body>
 <div class="app">
   <header class="top">
-    <div class="brand">
+    <button class="logo-btn" id="logoBtn" aria-label="Go to Stocking">
       <div class="mark">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M4 20V13L12 6L20 13V20H15V15H9V20H4Z" fill="#fff"/>
@@ -265,9 +283,9 @@
         <h1>Coop</h1>
         <p>Thaw cabinet stocking</p>
       </div>
-    </div>
+    </button>
     <div class="tabs" role="tablist" aria-label="View switcher">
-      <button class="tab-btn active" id="tabStaffBtn" role="tab" aria-selected="true">Staff</button>
+      <button class="tab-btn active" id="tabStaffBtn" role="tab" aria-selected="true">Stocking</button>
       <button class="tab-btn" id="tabAdminBtn" role="tab" aria-selected="false">Admin</button>
     </div>
   </header>
@@ -284,19 +302,20 @@
   <section class="view" id="viewAdmin">
     <div class="admin-grid">
       <div class="card admin-form">
-        <h2>Add extra cases</h2>
+        <h2>Add an order</h2>
         <form id="addOrderForm">
+          <label class="field">
+            <span>Order name</span>
+            <input type="text" id="fName" placeholder="e.g. Morning delivery" required>
+          </label>
           <label class="field">
             <span>Date needed</span>
             <input type="date" id="fDate" required>
           </label>
           <label class="field">
-            <span>Chicken type</span>
-            <select id="fType" required></select>
-          </label>
-          <label class="field">
-            <span>Extra cases</span>
-            <input type="number" id="fCases" min="1" step="1" value="1" required>
+            <span>Chicken needed</span>
+            <div class="item-rows" id="itemRows"></div>
+            <button type="button" class="add-item-btn" id="addItemBtn">+ Add another type</button>
           </label>
           <label class="field">
             <span>Notes for staff (optional)</span>
@@ -350,19 +369,13 @@
       <div id="completedBannerSlot"></div>
       <div class="detail-head">
         <div>
-          <div class="step-label" id="stepLabelDetail">Step 2 · Review &amp; stock</div>
-          <h2 class="step-title" style="margin-bottom:2px;" id="detailDateLabel"></h2>
-          <div class="num" id="detailOrderNum"></div>
+          <div class="step-label" id="stepLabelDetail">Step 2 · Stock as needed</div>
+          <h2 class="step-title" style="margin-bottom:2px;" id="detailNameLabel"></h2>
+          <div class="num" id="detailDateLabel" style="color:var(--ink-soft);font-size:13px;"></div>
         </div>
       </div>
-      <div class="type-pill" id="detailTypePill"></div>
 
-      <div class="need-box" id="needBox">
-        <div>
-          <div class="lab">Cases needed</div>
-          <div class="num-lg" id="needCasesNum">0</div>
-        </div>
-      </div>
+      <div class="items-box" id="itemsBox"></div>
 
       <div class="order-notes" id="detailAdminNotes" style="display:none;"></div>
 
@@ -424,6 +437,7 @@
   let activeDateStr = null;
   let activeOrderId = null;
   let firstLoad = true;
+  let itemRowSeq = 0;
 
   function todayStr(){
     const d = new Date();
@@ -451,9 +465,51 @@
     d.textContent = str;
     return d.innerHTML;
   }
+  // Normalize an order to always have an items array, even for legacy docs
+  // that stored a single flat type/cases pair.
+  function getItems(o){
+    if(Array.isArray(o.items) && o.items.length) return o.items;
+    if(o.type) return [{ type: o.type, cases: o.cases || 0 }];
+    return [];
+  }
+  function getTotalCases(o){
+    return getItems(o).reduce((sum,i)=> sum + (parseInt(i.cases,10)||0), 0);
+  }
+  function getOrderName(o, fallbackIdx){
+    return (o.name && o.name.trim()) ? o.name.trim() : `Order ${fallbackIdx+1}`;
+  }
 
-  const typeSelect = $('fType');
-  typeSelect.innerHTML = CHICKEN_TYPES.map(t=>`<option value="${t}">${t}</option>`).join('');
+  // ---------- ITEM ROWS (admin form) ----------
+  function addItemRow(prefillType, prefillCases){
+    itemRowSeq++;
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.dataset.rowId = itemRowSeq;
+    const options = CHICKEN_TYPES.map(t=>`<option value="${t}" ${t===prefillType?'selected':''}>${t}</option>`).join('');
+    row.innerHTML = `
+      <select class="item-type">${options}</select>
+      <input type="number" class="item-cases" min="1" step="1" value="${prefillCases || 1}">
+      <button type="button" class="remove-item" aria-label="Remove this item">×</button>
+    `;
+    row.querySelector('.remove-item').addEventListener('click', ()=>{
+      row.remove();
+      updateRemoveButtons();
+    });
+    $('itemRows').appendChild(row);
+    updateRemoveButtons();
+  }
+  function updateRemoveButtons(){
+    const rows = $('itemRows').querySelectorAll('.item-row');
+    rows.forEach(r=>{
+      r.querySelector('.remove-item').disabled = rows.length <= 1;
+    });
+  }
+  function resetItemRows(){
+    $('itemRows').innerHTML = '';
+    addItemRow();
+  }
+  $('addItemBtn').addEventListener('click', ()=>addItemRow());
+  resetItemRows();
 
   function setTab(tab){
     const isStaff = tab === 'staff';
@@ -473,6 +529,7 @@
   }
   $('tabStaffBtn').addEventListener('click', ()=>setTab('staff'));
   $('tabAdminBtn').addEventListener('click', ()=>setTab('admin'));
+  $('logoBtn').addEventListener('click', ()=>setTab('staff'));
 
   function showView(id){
     ['viewCalendar','viewOrderList','viewOrderDetail'].forEach(v=>{
@@ -482,19 +539,25 @@
 
   $('addOrderForm').addEventListener('submit', async (e)=>{
     e.preventDefault();
+    const name = $('fName').value.trim();
     const date = $('fDate').value;
-    const type = $('fType').value;
-    const cases = parseInt($('fCases').value, 10);
     const notes = $('fNotes').value.trim();
-    if(!date || !type || !cases || cases < 1) return;
+    const rows = Array.from($('itemRows').querySelectorAll('.item-row'));
+    const items = rows.map(r=>({
+      type: r.querySelector('.item-type').value,
+      cases: parseInt(r.querySelector('.item-cases').value, 10) || 0
+    })).filter(i=>i.cases > 0);
+
+    if(!date || items.length === 0) return;
+
     const btn = $('addOrderBtn');
     btn.disabled = true;
     btn.textContent = 'Adding…';
     try{
       await ordersRef.add({
+        name,
         date,
-        type,
-        cases,
+        items,
         adminNotes: notes,
         status: 'pending',
         staffNotes: '',
@@ -502,8 +565,8 @@
         completedAt: null
       });
       e.target.reset();
-      $('fCases').value = 1;
       $('fDate').value = todayStr();
+      resetItemRows();
       showToast('Order added to calendar.');
     }catch(err){
       showToast('Could not add order — check connection.');
@@ -519,17 +582,21 @@
       return;
     }
     const sorted = [...orders].sort((a,b)=> a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
-    list.innerHTML = sorted.map(o => `
+    list.innerHTML = sorted.map((o, i) => {
+      const items = getItems(o);
+      const total = getTotalCases(o);
+      const typeSummary = items.length === 1 ? items[0].type : `${items.length} types`;
+      return `
       <div class="order-row">
         <span class="dot ${o.status === 'completed' ? 'complete' : 'pending'}"></span>
         <div class="meta">
-          <div class="d">${fmtDateShort(o.date)}</div>
+          <div class="d">${escapeHtml(getOrderName(o, i))} · ${fmtDateShort(o.date)}</div>
           <div class="n">${o.adminNotes ? escapeHtml(o.adminNotes) : (o.status === 'completed' ? 'Completed' : 'Needs stocking')}</div>
         </div>
-        <div class="cases">${o.cases}<small>${escapeHtml(o.type || '')}</small></div>
+        <div class="cases">${total}<small>${escapeHtml(typeSummary)}</small></div>
         <button class="btn-danger-text" data-id="${o.id}">Remove</button>
       </div>
-    `).join('');
+    `;}).join('');
     list.querySelectorAll('.btn-danger-text').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
         const id = btn.getAttribute('data-id');
@@ -631,21 +698,23 @@
     $('markAllBtn').textContent = anyPending ? 'Mark all complete' : 'All complete ✓';
 
     const list = $('ticketList');
-    list.innerHTML = dayOrders.map((o, idx) => `
-      <div class="ticket ${o.status === 'completed' ? 'done' : ''}" data-id="${o.id}" tabindex="0" role="button" aria-label="Order ${idx+1}, ${escapeHtml(o.type)}, ${o.cases} cases, ${o.status === 'completed' ? 'completed' : 'needs stocking'}">
-        <div>
-          <div class="tnum">ORDER #${String(idx+1).padStart(3,'0')}</div>
-          <div class="tmain">
-            <div class="ttype">${escapeHtml(o.type)}</div>
-            ${o.adminNotes ? `<div class="tnotes">${escapeHtml(o.adminNotes)}</div>` : ''}
-          </div>
+    list.innerHTML = dayOrders.map((o, idx) => {
+      const items = getItems(o);
+      const total = getTotalCases(o);
+      const itemLines = items.map(i => `${i.cases} × ${escapeHtml(i.type)}`).join(' &nbsp;·&nbsp; ');
+      return `
+      <div class="ticket ${o.status === 'completed' ? 'done' : ''}" data-id="${o.id}" tabindex="0" role="button" aria-label="${escapeHtml(getOrderName(o, idx))}, ${total} cases, ${o.status === 'completed' ? 'completed' : 'needs stocking'}">
+        <div class="tmain">
+          <div class="ttype">${escapeHtml(getOrderName(o, idx))}</div>
+          <div class="titems">${itemLines}</div>
+          ${o.adminNotes ? `<div class="tnotes">${escapeHtml(o.adminNotes)}</div>` : ''}
         </div>
         <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
           <span class="status-chip ${o.status === 'completed' ? 'done' : 'pending'}">${o.status === 'completed' ? 'Completed' : 'Pending'}</span>
-          <div class="tcases">${o.cases}<small>cases</small></div>
+          <div class="tcases">${total}<small>cases</small></div>
         </div>
       </div>
-    `).join('') || '<div class="empty-note">No orders for this date.</div>';
+    `;}).join('') || '<div class="empty-note">No orders for this date.</div>';
 
     list.querySelectorAll('.ticket').forEach(el=>{
       const open = ()=>openOrderDetail(el.getAttribute('data-id'));
@@ -685,15 +754,28 @@
     if(!o){ showCalendar(); return; }
 
     const isDone = o.status === 'completed';
-    $('detailDateLabel').textContent = fmtDateLong(o.date);
     const dayOrders = ordersForDate(o.date).sort((a,b)=>a.createdAt-b.createdAt);
     const idx = dayOrders.findIndex(x=>x.id===o.id);
-    $('detailOrderNum').textContent = `ORDER #${String(idx+1).padStart(3,'0')}`;
-    $('detailTypePill').textContent = o.type;
+
+    $('detailNameLabel').textContent = getOrderName(o, idx);
+    $('detailDateLabel').textContent = fmtDateLong(o.date);
     $('stepLabelDetail').textContent = isDone ? 'Completed' : 'Step 2 · Stock as needed';
 
-    $('needBox').className = 'need-box' + (isDone ? ' done' : '');
-    $('needCasesNum').textContent = o.cases;
+    const items = getItems(o);
+    const total = getTotalCases(o);
+    const itemsBox = $('itemsBox');
+    itemsBox.className = 'items-box' + (isDone ? ' done' : '');
+    itemsBox.innerHTML = items.map(i => `
+      <div class="item-line">
+        <span class="itype">${escapeHtml(i.type)}</span>
+        <span class="icases">${i.cases} cases</span>
+      </div>
+    `).join('') + `
+      <div class="item-total">
+        <span class="lab">Total cases</span>
+        <span class="num-lg">${total}</span>
+      </div>
+    `;
 
     if(o.adminNotes){
       $('detailAdminNotes').style.display = 'block';
