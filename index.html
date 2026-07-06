@@ -3,29 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Thaw Cabinet Stocking</title>
+<title>Coop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
   :root{
-    --bg:#FAFAF7;
-    --surface:#FFFFFF;
-    --ink:#1E2B24;
-    --ink-soft:#5B6B62;
-    --line:#E3E0D5;
-    --accent:#2F6F4E;
-    --accent-dark:#204E37;
-    --pending:#D6416A;
-    --pending-bg:#FCE9EF;
-    --pending-line:#F3C1D2;
-    --complete:#2F8F55;
-    --complete-bg:#E6F5EA;
-    --complete-line:#BFE3CB;
-    --focus:#1F6FEB;
-    --radius:14px;
-    --shadow: 0 1px 2px rgba(30,43,36,0.06), 0 8px 24px rgba(30,43,36,0.06);
+    --bg:#12161A;
+    --surface:#1B2024;
+    --surface-2:#242A2F;
+    --ink:#F4F1E9;
+    --ink-soft:#98A19C;
+    --line:#2B3236;
+    --accent:#E8A93B;
+    --accent-dark:#C98A22;
+    --accent-bg: rgba(232,169,59,0.14);
+    --pending:#FF7A8A;
+    --pending-bg: rgba(255,122,138,0.14);
+    --pending-line: rgba(255,122,138,0.32);
+    --complete:#4ADE80;
+    --complete-bg: rgba(74,222,128,0.13);
+    --complete-line: rgba(74,222,128,0.32);
+    --focus:#6EA8FE;
+    --radius:16px;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 30px rgba(0,0,0,0.35);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -36,197 +38,217 @@
     min-height:100vh;
     -webkit-font-smoothing:antialiased;
   }
-  .app{max-width:920px;margin:0 auto;padding:20px 16px 60px;}
+  ::selection{background:var(--accent);color:#1B1200;}
+  .app{max-width:960px;margin:0 auto;padding:20px 16px 70px;}
 
   header.top{
     display:flex;align-items:center;justify-content:space-between;
-    gap:12px;margin-bottom:20px;flex-wrap:wrap;
+    gap:14px;margin-bottom:22px;flex-wrap:wrap;position:relative;
   }
-  .brand{display:flex;align-items:center;gap:12px;}
+  header.top::before{
+    content:'';position:absolute;top:-40px;left:-20px;width:240px;height:180px;
+    background:radial-gradient(ellipse at center, rgba(232,169,59,0.20) 0%, rgba(232,169,59,0) 70%);
+    pointer-events:none;z-index:0;
+  }
+  .brand{display:flex;align-items:center;gap:13px;position:relative;z-index:1;}
   .brand .mark{
-    width:40px;height:40px;border-radius:10px;background:var(--accent);
+    width:44px;height:44px;border-radius:12px;
+    background:linear-gradient(160deg, var(--accent), var(--accent-dark));
     display:flex;align-items:center;justify-content:center;flex-shrink:0;
-    box-shadow: inset 0 -3px 0 rgba(0,0,0,0.15);
+    box-shadow: 0 4px 14px rgba(232,169,59,0.35);
   }
-  .brand .mark svg{width:22px;height:22px;}
+  .brand .mark svg{width:24px;height:24px;}
   .brand h1{
-    font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;
-    margin:0;letter-spacing:-0.01em;line-height:1.2;
+    font-family:'Fraunces',serif;font-size:24px;font-weight:600;
+    margin:0;letter-spacing:-0.01em;line-height:1.1;color:var(--ink);
   }
-  .brand p{margin:0;font-size:12.5px;color:var(--ink-soft);}
+  .brand p{margin:2px 0 0;font-size:12.5px;color:var(--ink-soft);}
 
-  .tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--line);padding:4px;border-radius:12px;box-shadow:var(--shadow);}
+  .tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--line);padding:4px;border-radius:12px;box-shadow:var(--shadow);position:relative;z-index:1;}
   .tab-btn{
-    border:none;background:transparent;padding:8px 16px;border-radius:9px;
+    border:none;background:transparent;padding:9px 18px;border-radius:9px;
     font-family:'Inter';font-weight:600;font-size:13.5px;color:var(--ink-soft);
     cursor:pointer;transition:background .15s ease, color .15s ease;
   }
-  .tab-btn.active{background:var(--ink);color:#fff;}
+  .tab-btn.active{background:var(--accent);color:#1B1200;}
+  .tab-btn:hover:not(.active){color:var(--ink);}
   .tab-btn:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
 
-  .view{display:none;}
+  .view{display:none;animation:fadeIn .25s ease;}
   .view.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+  @media (prefers-reduced-motion: reduce){ .view{animation:none;} }
 
   .card{
     background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
     box-shadow:var(--shadow);
   }
 
-  .setup-card{padding:26px;max-width:640px;margin:40px auto;}
-  .setup-card h2{font-family:'Space Grotesk';margin-top:0;}
-  .setup-card code{background:#F4F2EC;padding:2px 6px;border-radius:5px;font-family:'IBM Plex Mono';font-size:12.5px;}
-  .setup-card textarea{width:100%;min-height:140px;font-family:'IBM Plex Mono';font-size:12.5px;}
+  .setup-card{padding:28px;max-width:640px;margin:40px auto;}
+  .setup-card h2{font-family:'Fraunces',serif;margin-top:0;font-weight:600;}
+  .setup-card code{background:var(--surface-2);padding:2px 6px;border-radius:5px;font-family:'IBM Plex Mono';font-size:12.5px;color:var(--accent);}
+  .setup-card p{color:var(--ink-soft);line-height:1.55;}
 
   .admin-grid{display:grid;grid-template-columns:1fr;gap:18px;}
-  @media(min-width:720px){.admin-grid{grid-template-columns: 340px 1fr;align-items:start;}}
-  .admin-form{padding:20px;}
+  @media(min-width:760px){.admin-grid{grid-template-columns: 350px 1fr;align-items:start;}}
+  .admin-form{padding:22px;}
   .admin-form h2, .admin-list h2{
-    font-family:'Space Grotesk';font-size:15px;margin:0 0 14px;
-    text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);
+    font-family:'Inter';font-size:12.5px;margin:0 0 16px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);
   }
-  label.field{display:block;margin-bottom:14px;}
-  label.field span{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;color:var(--ink);}
+  label.field{display:block;margin-bottom:15px;}
+  label.field span{display:block;font-size:12.5px;font-weight:600;margin-bottom:7px;color:var(--ink);}
   input[type=date],input[type=number],textarea,select{
-    width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;
-    font-family:'Inter';font-size:14.5px;color:var(--ink);background:#fff;
+    width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 13px;
+    font-family:'Inter';font-size:14.5px;color:var(--ink);background:var(--surface-2);
+    color-scheme: dark;
   }
   select{appearance:auto;}
   input[type=number]{font-family:'IBM Plex Mono';font-weight:600;}
-  textarea{resize:vertical;min-height:64px;font-size:14px;}
+  textarea{resize:vertical;min-height:64px;font-size:14px;font-family:'Inter';}
   input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--focus);outline-offset:1px;}
   .btn{
-    appearance:none;border:none;border-radius:10px;padding:11px 18px;
+    appearance:none;border:none;border-radius:11px;padding:12px 18px;
     font-family:'Inter';font-weight:700;font-size:14px;cursor:pointer;
-    transition:transform .08s ease, filter .15s ease;
+    transition:transform .08s ease, filter .15s ease, background .15s ease;
   }
   .btn:active{transform:translateY(1px);}
   .btn:disabled{opacity:.5;cursor:not-allowed;}
-  .btn-primary{background:var(--accent);color:#fff;}
-  .btn-primary:hover{filter:brightness(1.07);}
+  .btn-primary{background:var(--accent);color:#1B1200;}
+  .btn-primary:hover{filter:brightness(1.08);}
   .btn-block{width:100%;}
   .btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line);}
-  .btn-ghost:hover{background:#F4F2EC;}
-  .btn-danger-text{background:none;border:none;color:#B3324C;font-size:12.5px;font-weight:600;cursor:pointer;padding:4px 6px;}
+  .btn-ghost:hover{background:var(--surface-2);color:var(--ink);}
+  .btn-danger-text{background:none;border:none;color:var(--pending);font-size:12.5px;font-weight:600;cursor:pointer;padding:4px 6px;opacity:.85;}
+  .btn-danger-text:hover{opacity:1;}
 
-  .admin-list{padding:20px;margin-top:0;}
+  .admin-list{padding:22px;margin-top:0;}
   .order-row{
-    display:flex;align-items:center;gap:12px;padding:12px 10px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:12px;padding:13px 8px;border-bottom:1px solid var(--line);
   }
   .order-row:last-child{border-bottom:none;}
   .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
-  .dot.pending{background:var(--pending);}
-  .dot.complete{background:var(--complete);}
+  .dot.pending{background:var(--pending);box-shadow:0 0 0 3px var(--pending-bg);}
+  .dot.complete{background:var(--complete);box-shadow:0 0 0 3px var(--complete-bg);}
   .order-row .meta{flex:1;min-width:0;}
-  .order-row .meta .d{font-weight:700;font-size:13.5px;}
+  .order-row .meta .d{font-weight:700;font-size:13.5px;color:var(--ink);}
   .order-row .meta .n{font-size:12px;color:var(--ink-soft);}
   .order-row .cases{font-family:'IBM Plex Mono';font-weight:700;font-size:13px;color:var(--ink);white-space:nowrap;text-align:right;}
-  .order-row .cases small{display:block;font-weight:500;font-size:10px;color:var(--ink-soft);}
-  .empty-note{padding:20px;text-align:center;color:var(--ink-soft);font-size:13.5px;}
+  .order-row .cases small{display:block;font-weight:500;font-size:10px;color:var(--ink-soft);font-family:'Inter';}
+  .empty-note{padding:24px;text-align:center;color:var(--ink-soft);font-size:13.5px;}
 
-  .cal-card{padding:18px;}
-  .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-  .cal-nav h2{font-family:'Space Grotesk';font-size:19px;margin:0;}
+  .cal-card{padding:20px;}
+  .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .cal-nav h2{font-family:'Fraunces',serif;font-size:21px;font-weight:600;margin:0;color:var(--ink);}
   .cal-nav .navbtns{display:flex;gap:6px;}
   .icon-btn{
-    width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:#fff;
+    width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);
     display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);
   }
-  .icon-btn:hover{background:#F4F2EC;}
+  .icon-btn:hover{background:var(--line);}
   .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
-  .cal-dow{font-size:11px;font-weight:700;text-align:center;color:var(--ink-soft);padding-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+  .cal-dow{font-size:11px;font-weight:700;text-align:center;color:var(--ink-soft);padding-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}
   .cal-cell{
-    position:relative;aspect-ratio:1/1;border-radius:10px;border:1px solid var(--line);
-    background:#fff;display:flex;flex-direction:column;padding:6px;cursor:default;
-    min-height:56px;
+    position:relative;aspect-ratio:1/1;border-radius:11px;border:1px solid var(--line);
+    background:var(--surface-2);display:flex;flex-direction:column;padding:7px;cursor:default;
+    min-height:52px;transition:transform .1s ease, border-color .15s ease;
   }
   .cal-cell.pad{background:transparent;border-color:transparent;}
   .cal-cell.has-orders{cursor:pointer;}
-  .cal-cell.has-orders:hover{border-color:var(--ink);}
-  .cal-cell.today{box-shadow:0 0 0 2px var(--ink) inset;}
+  .cal-cell.has-orders:hover{border-color:var(--accent);transform:translateY(-1px);}
+  .cal-cell.today{box-shadow:0 0 0 2px var(--accent) inset;}
   .cal-cell .dnum{font-size:12.5px;font-weight:700;color:var(--ink-soft);}
   .cal-cell.pending{background:var(--pending-bg);border-color:var(--pending-line);}
   .cal-cell.pending .dnum{color:var(--pending);}
   .cal-cell.complete{background:var(--complete-bg);border-color:var(--complete-line);}
   .cal-cell.complete .dnum{color:var(--complete);}
   .cal-badge{
-    margin-top:auto;font-family:'IBM Plex Mono';font-size:10.5px;font-weight:700;
+    margin-top:auto;font-family:'IBM Plex Mono';font-size:10px;font-weight:700;
     padding:2px 6px;border-radius:6px;align-self:flex-start;
   }
-  .cal-cell.pending .cal-badge{background:var(--pending);color:#fff;}
-  .cal-cell.complete .cal-badge{background:var(--complete);color:#fff;}
+  .cal-cell.pending .cal-badge{background:var(--pending);color:#2A0A10;}
+  .cal-cell.complete .cal-badge{background:var(--complete);color:#0A2A14;}
 
-  .legend{display:flex;gap:16px;margin-top:14px;font-size:12.5px;color:var(--ink-soft);flex-wrap:wrap;}
+  .legend{display:flex;gap:16px;margin-top:16px;font-size:12.5px;color:var(--ink-soft);flex-wrap:wrap;}
   .legend span{display:inline-flex;align-items:center;gap:6px;}
   .legend .sw{width:10px;height:10px;border-radius:3px;}
 
   .breadcrumb{display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:13px;color:var(--ink-soft);}
-  .breadcrumb button{background:none;border:none;color:var(--accent-dark);font-weight:700;cursor:pointer;padding:0;font-size:13px;}
-  .step-label{font-family:'Space Grotesk';font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-bottom:6px;}
-  .step-title{font-family:'Space Grotesk';font-size:20px;font-weight:700;margin:0 0 16px;}
+  .breadcrumb button{background:none;border:none;color:var(--accent);font-weight:700;cursor:pointer;padding:0;font-size:13px;}
+  .step-label{font-family:'Inter';font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-soft);margin-bottom:6px;font-weight:700;}
+  .step-title{font-family:'Fraunces',serif;font-size:22px;font-weight:600;margin:0 0 16px;color:var(--ink);}
 
   .ticket-list{display:flex;flex-direction:column;gap:12px;}
   .ticket{
-    position:relative;background:#fff;border:1px solid var(--line);border-radius:10px;
+    position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;
     padding:16px 16px 16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;
-    border-left:5px solid var(--pending);transition:transform .1s ease;
+    border-left:5px solid var(--pending);transition:transform .12s ease, border-color .12s ease;
   }
   .ticket.done{border-left-color:var(--complete);}
-  .ticket:hover{transform:translateX(2px);}
+  .ticket:hover{transform:translateX(3px);}
   .ticket:focus-visible{outline:2px solid var(--focus);}
   .ticket .tnum{font-family:'IBM Plex Mono';font-size:11px;color:var(--ink-soft);}
   .ticket .tmain{flex:1;min-width:0;}
-  .ticket .ttype{font-weight:700;font-size:14.5px;}
+  .ticket .ttype{font-weight:700;font-size:15px;color:var(--ink);}
   .ticket .tnotes{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
-  .ticket .tcases{font-family:'IBM Plex Mono';font-weight:700;font-size:18px;color:var(--ink);}
-  .ticket .tcases small{display:block;font-size:9.5px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;}
-  .status-chip{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;}
+  .ticket .tcases{font-family:'IBM Plex Mono';font-weight:700;font-size:19px;color:var(--ink);}
+  .ticket .tcases small{display:block;font-size:9.5px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;font-family:'Inter';}
+  .status-chip{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;}
   .status-chip.pending{background:var(--pending-bg);color:var(--pending);}
   .status-chip.done{background:var(--complete-bg);color:var(--complete);}
 
-  .detail-card{padding:22px;}
+  .detail-card{padding:24px;}
   .detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px;}
   .detail-head .num{font-family:'IBM Plex Mono';color:var(--ink-soft);font-size:12.5px;}
   .type-pill{
-    display:inline-block;background:#F4F2EC;color:var(--ink);font-weight:700;font-size:13px;
-    padding:5px 12px;border-radius:20px;margin-bottom:16px;
+    display:inline-block;background:var(--surface-2);color:var(--ink);font-weight:700;font-size:13px;
+    padding:6px 14px;border-radius:20px;margin-bottom:18px;border:1px solid var(--line);
   }
   .need-box{
     display:flex;align-items:center;justify-content:space-between;
-    background:var(--pending-bg);border:1px dashed var(--pending-line);border-radius:10px;
-    padding:16px;margin-bottom:16px;
+    background:var(--pending-bg);border:1px dashed var(--pending-line);border-radius:12px;
+    padding:18px;margin-bottom:18px;
   }
   .need-box.done{background:var(--complete-bg);border-color:var(--complete-line);}
   .need-box .lab{font-size:12.5px;color:var(--ink-soft);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
-  .need-box .num-lg{font-family:'IBM Plex Mono';font-size:34px;font-weight:700;line-height:1;color:var(--ink);}
-  .order-notes{font-size:13.5px;color:var(--ink-soft);background:#F6F5EF;border-radius:9px;padding:10px 12px;margin-bottom:18px;}
+  .need-box .num-lg{font-family:'IBM Plex Mono';font-size:36px;font-weight:700;line-height:1;color:var(--ink);}
+  .order-notes{font-size:13.5px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:11px 13px;margin-bottom:18px;border:1px solid var(--line);}
   .stepper{display:flex;align-items:center;gap:10px;}
   .stepper button{
-    width:40px;height:40px;border-radius:9px;border:1px solid var(--line);background:#fff;
-    font-size:18px;font-weight:700;cursor:pointer;
+    width:42px;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);
+    font-size:18px;font-weight:700;cursor:pointer;color:var(--ink);
   }
-  .stepper button:hover{background:#F4F2EC;}
+  .stepper button:hover{background:var(--line);}
   .stepper input{width:80px;text-align:center;font-size:18px;}
-  .divider{height:1px;background:var(--line);margin:18px 0;}
+  .divider{height:1px;background:var(--line);margin:20px 0;}
   .completed-banner{
     display:flex;align-items:center;gap:10px;background:var(--complete-bg);color:var(--complete);
-    border-radius:9px;padding:10px 14px;font-weight:700;font-size:13.5px;margin-bottom:16px;
+    border-radius:10px;padding:11px 15px;font-weight:700;font-size:13.5px;margin-bottom:16px;
   }
   .action-row{display:flex;gap:10px;flex-wrap:wrap;}
 
   .toast{
-    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
-    background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+    background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-left:3px solid var(--accent);
+    padding:11px 20px;border-radius:11px;
     font-size:13.5px;font-weight:600;box-shadow:var(--shadow);opacity:0;pointer-events:none;
     transition:opacity .2s ease, transform .2s ease;z-index:50;
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
 
-  .loading-row{display:flex;align-items:center;gap:10px;color:var(--ink-soft);font-size:13.5px;padding:20px;}
+  .loading-row{display:flex;align-items:center;gap:10px;color:var(--ink-soft);font-size:13.5px;padding:24px;}
   .spinner{width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
 
-  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--complete);display:inline-block;margin-right:6px;}
-  .sync-note{font-size:11.5px;color:var(--ink-soft);display:flex;align-items:center;margin-top:4px;}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--complete);display:inline-block;margin-right:6px;box-shadow:0 0 0 3px var(--complete-bg);}
+  .sync-note{font-size:11.5px;color:var(--ink-soft);display:flex;align-items:center;margin-top:6px;}
+
+  @media(max-width:480px){
+    .brand h1{font-size:20px;}
+    .need-box .num-lg{font-size:30px;}
+    .cal-grid{gap:4px;}
+    .cal-cell{border-radius:8px;min-height:44px;padding:5px;}
+  }
 </style>
 </head>
 <body>
@@ -235,12 +257,12 @@
     <div class="brand">
       <div class="mark">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2C9 6 6 8 6 12a6 6 0 0012 0c0-4-3-6-6-10z" fill="#fff" opacity="0.95"/>
+          <path d="M4 20V13L12 6L20 13V20H15V15H9V20H4Z" fill="#1B1200"/>
         </svg>
       </div>
       <div>
-        <h1>Thaw Cabinet Stocking</h1>
-        <p>Extra chicken case tracking</p>
+        <h1>Coop</h1>
+        <p>Thaw cabinet stocking</p>
       </div>
     </div>
     <div class="tabs" role="tablist" aria-label="View switcher">
@@ -249,17 +271,15 @@
     </div>
   </header>
 
-  <div id="loadingRow" class="loading-row"><div class="spinner"></div> Connecting…</div>
+  <div id="loadingRow" class="loading-row"><div class="spinner"></div> Waking up the coop…</div>
 
-  <!-- SETUP SCREEN (shown until firebaseConfig is filled in) -->
   <div class="card setup-card" id="setupCard" style="display:none;">
     <h2>One-time setup needed</h2>
-    <p>This app stores orders in Firebase so Admin can add them from anywhere. Paste your <code>firebaseConfig</code> object (from Firebase console → Project settings → Your apps) into the marked spot near the top of this file's <code>&lt;script&gt;</code> tag, then reload.</p>
-    <p style="color:var(--ink-soft);font-size:13px;">Look for the block starting with <code>const firebaseConfig = {</code> and replace the placeholder values.</p>
+    <p>Coop stores orders in Firebase so Admin can add them from anywhere. Paste your <code>firebaseConfig</code> object (from Firebase console → Project settings → Your apps) into the marked spot near the top of this file's <code>&lt;script&gt;</code> tag, then reload.</p>
+    <p style="font-size:13px;">Look for the block starting with <code>const firebaseConfig = {</code> and replace the placeholder values.</p>
   </div>
 
   <div id="mainUI" style="display:none;">
-  <!-- ADMIN VIEW -->
   <section class="view" id="viewAdmin">
     <div class="admin-grid">
       <div class="card admin-form">
@@ -291,7 +311,6 @@
     </div>
   </section>
 
-  <!-- STAFF VIEW: CALENDAR (Step 1 entry) -->
   <section class="view active" id="viewCalendar">
     <div class="card cal-card">
       <div class="cal-nav">
@@ -312,7 +331,6 @@
     </div>
   </section>
 
-  <!-- STEP 1: order list for a date -->
   <section class="view" id="viewOrderList">
     <div class="breadcrumb"><button id="backToCalBtn">← Calendar</button></div>
     <div class="step-label">Step 1 · Select an order</div>
@@ -320,7 +338,6 @@
     <div class="ticket-list" id="ticketList"></div>
   </section>
 
-  <!-- STEP 2 & 3: order detail -->
   <section class="view" id="viewOrderDetail">
     <div class="breadcrumb"><button id="backToListBtn">← Back to orders</button></div>
     <div class="card detail-card">
@@ -370,10 +387,6 @@
 <script>
 (function(){
 
-  // ======================================================================
-  // PASTE YOUR FIREBASE CONFIG HERE (Firebase console -> Project settings
-  // -> Your apps -> the firebaseConfig object). Then reload the page.
-  // ======================================================================
   const firebaseConfig = {
     apiKey: "AIzaSyD-6QAh2D2YEiG0DfsdvgswK2VKqNYYT70",
     authDomain: "ng-coop.firebaseapp.com",
@@ -382,7 +395,6 @@
     messagingSenderId: "285745994427",
     appId: "1:285745994427:web:04997b6796dcdb2751679e"
   };
-  // ======================================================================
 
   const CHICKEN_TYPES = [
     "Filet",
@@ -410,7 +422,7 @@
   const ordersRef = db.collection('orders');
 
   let orders = [];
-  let currentYear, currentMonth; // 0-indexed month
+  let currentYear, currentMonth;
   let activeDateStr = null;
   let activeOrderId = null;
   let firstLoad = true;
@@ -442,11 +454,9 @@
     return d.innerHTML;
   }
 
-  // ---------- POPULATE TYPE DROPDOWN ----------
   const typeSelect = $('fType');
   typeSelect.innerHTML = CHICKEN_TYPES.map(t=>`<option value="${t}">${t}</option>`).join('');
 
-  // ---------- TAB SWITCHING ----------
   function setTab(tab){
     const isStaff = tab === 'staff';
     $('tabStaffBtn').classList.toggle('active', isStaff);
@@ -472,7 +482,6 @@
     });
   }
 
-  // ---------- ADMIN: ADD ----------
   $('addOrderForm').addEventListener('submit', async (e)=>{
     e.preventDefault();
     const date = $('fDate').value;
@@ -537,7 +546,6 @@
     });
   }
 
-  // ---------- CALENDAR ----------
   function showCalendar(){
     showView('viewCalendar');
     renderCalendar();
@@ -611,7 +619,6 @@
     renderCalendar();
   });
 
-  // ---------- STEP 1: ORDER LIST ----------
   function openOrderList(dateStr){
     activeDateStr = dateStr;
     renderOrderList();
@@ -646,7 +653,6 @@
   }
   $('backToCalBtn').addEventListener('click', showCalendar);
 
-  // ---------- STEP 2 & 3: ORDER DETAIL ----------
   function openOrderDetail(orderId){
     activeOrderId = orderId;
     renderOrderDetail();
@@ -735,7 +741,6 @@
     else showCalendar();
   });
 
-  // ---------- REALTIME REFRESH ----------
   function refreshCurrentView(){
     renderCalendar();
     renderAdminList();
@@ -743,7 +748,6 @@
     if($('viewOrderDetail').classList.contains('active')) renderOrderDetail();
   }
 
-  // ---------- INIT ----------
   const t = new Date();
   currentYear = t.getFullYear();
   currentMonth = t.getMonth();
