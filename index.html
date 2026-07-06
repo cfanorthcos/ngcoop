@@ -302,7 +302,11 @@
   <section class="view" id="viewAdmin">
     <div class="admin-grid">
       <div class="card admin-form">
-        <h2>Add an order</h2>
+        <h2 id="formHeading">Add an order</h2>
+        <div id="editingBanner" style="display:none;background:var(--accent-bg);border:1px solid var(--accent);color:var(--accent-dark);border-radius:10px;padding:10px 13px;margin-bottom:16px;font-size:13px;font-weight:600;align-items:center;justify-content:space-between;gap:10px;">
+          <span id="editingBannerText">Editing order</span>
+          <button type="button" id="cancelEditBtn" style="background:none;border:none;color:var(--accent-dark);font-weight:700;cursor:pointer;font-size:13px;text-decoration:underline;">Cancel</button>
+        </div>
         <form id="addOrderForm">
           <label class="field">
             <span>Order name</span>
@@ -552,27 +556,42 @@
 
     const btn = $('addOrderBtn');
     btn.disabled = true;
-    btn.textContent = 'Adding…';
-    try{
-      await ordersRef.add({
-        name,
-        date,
-        items,
-        adminNotes: notes,
-        status: 'pending',
-        staffNotes: '',
-        createdAt: Date.now(),
-        completedAt: null
-      });
-      e.target.reset();
-      $('fDate').value = todayStr();
-      resetItemRows();
-      showToast('Order added to calendar.');
-    }catch(err){
-      showToast('Could not add order — check connection.');
+
+    if(editingOrderId){
+      btn.textContent = 'Saving…';
+      try{
+        await ordersRef.doc(editingOrderId).update({
+          name, date, items, adminNotes: notes
+        });
+        showToast('Order updated.');
+        cancelEdit();
+      }catch(err){
+        showToast('Could not save changes — check connection.');
+        btn.textContent = 'Save changes';
+      }
+    } else {
+      btn.textContent = 'Adding…';
+      try{
+        await ordersRef.add({
+          name,
+          date,
+          items,
+          adminNotes: notes,
+          status: 'pending',
+          staffNotes: '',
+          createdAt: Date.now(),
+          completedAt: null
+        });
+        e.target.reset();
+        $('fDate').value = todayStr();
+        resetItemRows();
+        showToast('Order added to calendar.');
+      }catch(err){
+        showToast('Could not add order — check connection.');
+      }
+      btn.textContent = 'Add to calendar';
     }
     btn.disabled = false;
-    btn.textContent = 'Add to calendar';
   });
 
   function renderAdminList(){
@@ -594,6 +613,7 @@
           <div class="n">${o.adminNotes ? escapeHtml(o.adminNotes) : (o.status === 'completed' ? 'Completed' : 'Needs stocking')}</div>
         </div>
         <div class="cases">${total}<small>${escapeHtml(typeSummary)}</small></div>
+        <button class="btn-ghost btn-sm edit-order-btn" data-id="${o.id}">Edit</button>
         <button class="btn-danger-text" data-id="${o.id}">Remove</button>
       </div>
     `;}).join('');
@@ -608,7 +628,46 @@
         }
       });
     });
+    list.querySelectorAll('.edit-order-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const o = orders.find(x=>x.id === btn.getAttribute('data-id'));
+        if(o) startEdit(o);
+      });
+    });
   }
+
+  // ---------- EDIT ORDER ----------
+  let editingOrderId = null;
+
+  function startEdit(o){
+    editingOrderId = o.id;
+    $('fName').value = o.name || '';
+    $('fDate').value = o.date;
+    $('fNotes').value = o.adminNotes || '';
+    $('itemRows').innerHTML = '';
+    const items = getItems(o);
+    if(items.length){
+      items.forEach(i => addItemRow(i.type, i.cases));
+    } else {
+      addItemRow();
+    }
+    $('formHeading').textContent = 'Edit order';
+    $('addOrderBtn').textContent = 'Save changes';
+    $('editingBanner').style.display = 'flex';
+    $('editingBannerText').textContent = `Editing "${o.name || 'this order'}"`;
+    $('addOrderForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function cancelEdit(){
+    editingOrderId = null;
+    $('addOrderForm').reset();
+    $('fDate').value = todayStr();
+    resetItemRows();
+    $('formHeading').textContent = 'Add an order';
+    $('addOrderBtn').textContent = 'Add to calendar';
+    $('editingBanner').style.display = 'none';
+  }
+  $('cancelEditBtn').addEventListener('click', cancelEdit);
 
   function showCalendar(){
     showView('viewCalendar');
