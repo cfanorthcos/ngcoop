@@ -787,7 +787,18 @@
     if(!activeDateStr) return;
     const dayOrders = ordersForDate(activeDateStr).filter(o => o.status !== 'completed');
     if(dayOrders.length === 0) return;
-    if(!confirm(`Mark all ${dayOrders.length} order(s) for ${fmtDateShort(activeDateStr)} complete?`)) return;
+
+    const notesText = dayOrders
+      .map((o, i) => (o.adminNotes && o.adminNotes.trim()) ? `• ${getOrderName(o, i)}: "${o.adminNotes.trim()}"` : null)
+      .filter(Boolean)
+      .join('\n');
+
+    let confirmMsg = `Mark all ${dayOrders.length} order(s) for ${fmtDateShort(activeDateStr)} complete?`;
+    if(notesText){
+      confirmMsg = `These orders have notes — please read before continuing:\n\n${notesText}\n\n${confirmMsg}`;
+    }
+    if(!confirm(confirmMsg)) return;
+
     const btn = $('markAllBtn');
     btn.disabled = true;
     btn.textContent = 'Marking…';
@@ -868,6 +879,10 @@
     } else {
       actions.innerHTML = `<button class="btn btn-primary" id="submitBtn">Mark complete</button>`;
       $('submitBtn').addEventListener('click', async ()=>{
+        if(o.adminNotes && o.adminNotes.trim()){
+          const ok = confirm(`Note on this order:\n\n"${o.adminNotes.trim()}"\n\nConfirm you've read this before marking complete.`);
+          if(!ok) return;
+        }
         const btn = $('submitBtn');
         btn.disabled = true;
         btn.textContent = 'Submitting…';
