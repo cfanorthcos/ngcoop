@@ -233,6 +233,11 @@
   .item-total .num-lg{font-family:'IBM Plex Mono';font-size:22px;font-weight:700;color:var(--ink);}
 
   .order-notes{font-size:13.5px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:11px 13px;margin-bottom:18px;border:1px solid var(--line);}
+  .note-flag{background:var(--pending-bg);border:1.5px solid var(--pending-line);border-radius:12px;padding:15px 17px;margin-bottom:18px;}
+  .note-flag-text{font-weight:700;font-size:14.5px;color:var(--ink);margin-bottom:12px;line-height:1.45;}
+  .note-check{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13.5px;font-weight:700;color:var(--ink);user-select:none;}
+  .note-check input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;}
+  .note-check.disabled{cursor:default;opacity:.7;}
   .divider{height:1px;background:var(--line);margin:20px 0;}
   .completed-banner{
     display:flex;align-items:center;gap:10px;background:var(--complete-bg);color:var(--complete);
@@ -442,6 +447,7 @@
   let activeOrderId = null;
   let firstLoad = true;
   let itemRowSeq = 0;
+  const acknowledgedNotes = new Set();
 
   function todayStr(){
     const d = new Date();
@@ -847,11 +853,31 @@
       </div>
     `;
 
-    if(o.adminNotes){
-      $('detailAdminNotes').style.display = 'block';
-      $('detailAdminNotes').textContent = o.adminNotes;
+    const hasNote = !!(o.adminNotes && o.adminNotes.trim());
+    const noteBox = $('detailAdminNotes');
+    if(hasNote){
+      const checked = isDone || acknowledgedNotes.has(o.id);
+      noteBox.className = 'note-flag';
+      noteBox.style.display = 'block';
+      noteBox.innerHTML = `
+        <div class="note-flag-text">📌 ${escapeHtml(o.adminNotes.trim())}</div>
+        <label class="note-check${isDone ? ' disabled' : ''}">
+          <input type="checkbox" id="noteAckCheckbox" ${checked ? 'checked' : ''} ${isDone ? 'disabled' : ''}>
+          <span>I've read this note</span>
+        </label>
+      `;
+      if(!isDone){
+        $('noteAckCheckbox').addEventListener('change', (e)=>{
+          if(e.target.checked) acknowledgedNotes.add(o.id);
+          else acknowledgedNotes.delete(o.id);
+          const submitBtn = $('submitBtn');
+          if(submitBtn) submitBtn.disabled = !acknowledgedNotes.has(o.id);
+        });
+      }
     } else {
-      $('detailAdminNotes').style.display = 'none';
+      noteBox.className = '';
+      noteBox.style.display = 'none';
+      noteBox.innerHTML = '';
     }
 
     $('staffNotesInput').value = o.staffNotes || '';
@@ -877,12 +903,8 @@
         }catch(err){ showToast('Could not update order.'); }
       });
     } else {
-      actions.innerHTML = `<button class="btn btn-primary" id="submitBtn">Mark complete</button>`;
+      actions.innerHTML = `<button class="btn btn-primary" id="submitBtn" ${hasNote && !acknowledgedNotes.has(o.id) ? 'disabled' : ''}>Mark complete</button>`;
       $('submitBtn').addEventListener('click', async ()=>{
-        if(o.adminNotes && o.adminNotes.trim()){
-          const ok = confirm(`Note on this order:\n\n"${o.adminNotes.trim()}"\n\nConfirm you've read this before marking complete.`);
-          if(!ok) return;
-        }
         const btn = $('submitBtn');
         btn.disabled = true;
         btn.textContent = 'Submitting…';
