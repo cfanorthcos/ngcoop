@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thaw Cabinet Stocking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+  :root{
+    --bg:#FAFAF7;
+    --surface:#FFFFFF;
+    --ink:#1E2B24;
+    --ink-soft:#5B6B62;
+    --line:#E3E0D5;
+    --accent:#2F6F4E;
+    --accent-dark:#204E37;
+    --pending:#D6416A;
+    --pending-bg:#FCE9EF;
+    --pending-line:#F3C1D2;
+    --complete:#2F8F55;
+    --complete-bg:#E6F5EA;
+    --complete-line:#BFE3CB;
+    --focus:#1F6FEB;
+    --radius:14px;
+    --shadow: 0 1px 2px rgba(30,43,36,0.06), 0 8px 24px rgba(30,43,36,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{max-width:920px;margin:0 auto;padding:20px 16px 60px;}
+
+  header.top{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:12px;margin-bottom:20px;flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand .mark{
+    width:40px;height:40px;border-radius:10px;background:var(--accent);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,0.15);
+  }
+  .brand .mark svg{width:22px;height:22px;}
+  .brand h1{
+    font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;
+    margin:0;letter-spacing:-0.01em;line-height:1.2;
+  }
+  .brand p{margin:0;font-size:12.5px;color:var(--ink-soft);}
+
+  .tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--line);padding:4px;border-radius:12px;box-shadow:var(--shadow);}
+  .tab-btn{
+    border:none;background:transparent;padding:8px 16px;border-radius:9px;
+    font-family:'Inter';font-weight:600;font-size:13.5px;color:var(--ink-soft);
+    cursor:pointer;transition:background .15s ease, color .15s ease;
+  }
+  .tab-btn.active{background:var(--ink);color:#fff;}
+  .tab-btn:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);
+  }
+
+  .setup-card{padding:26px;max-width:640px;margin:40px auto;}
+  .setup-card h2{font-family:'Space Grotesk';margin-top:0;}
+  .setup-card code{background:#F4F2EC;padding:2px 6px;border-radius:5px;font-family:'IBM Plex Mono';font-size:12.5px;}
+  .setup-card textarea{width:100%;min-height:140px;font-family:'IBM Plex Mono';font-size:12.5px;}
+
+  .admin-grid{display:grid;grid-template-columns:1fr;gap:18px;}
+  @media(min-width:720px){.admin-grid{grid-template-columns: 340px 1fr;align-items:start;}}
+  .admin-form{padding:20px;}
+  .admin-form h2, .admin-list h2{
+    font-family:'Space Grotesk';font-size:15px;margin:0 0 14px;
+    text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);
+  }
+  label.field{display:block;margin-bottom:14px;}
+  label.field span{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;color:var(--ink);}
+  input[type=date],input[type=number],textarea,select{
+    width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;
+    font-family:'Inter';font-size:14.5px;color:var(--ink);background:#fff;
+  }
+  select{appearance:auto;}
+  input[type=number]{font-family:'IBM Plex Mono';font-weight:600;}
+  textarea{resize:vertical;min-height:64px;font-size:14px;}
+  input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--focus);outline-offset:1px;}
+  .btn{
+    appearance:none;border:none;border-radius:10px;padding:11px 18px;
+    font-family:'Inter';font-weight:700;font-size:14px;cursor:pointer;
+    transition:transform .08s ease, filter .15s ease;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-primary:hover{filter:brightness(1.07);}
+  .btn-block{width:100%;}
+  .btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line);}
+  .btn-ghost:hover{background:#F4F2EC;}
+  .btn-danger-text{background:none;border:none;color:#B3324C;font-size:12.5px;font-weight:600;cursor:pointer;padding:4px 6px;}
+
+  .admin-list{padding:20px;margin-top:0;}
+  .order-row{
+    display:flex;align-items:center;gap:12px;padding:12px 10px;border-bottom:1px solid var(--line);
+  }
+  .order-row:last-child{border-bottom:none;}
+  .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .dot.pending{background:var(--pending);}
+  .dot.complete{background:var(--complete);}
+  .order-row .meta{flex:1;min-width:0;}
+  .order-row .meta .d{font-weight:700;font-size:13.5px;}
+  .order-row .meta .n{font-size:12px;color:var(--ink-soft);}
+  .order-row .cases{font-family:'IBM Plex Mono';font-weight:700;font-size:13px;color:var(--ink);white-space:nowrap;text-align:right;}
+  .order-row .cases small{display:block;font-weight:500;font-size:10px;color:var(--ink-soft);}
+  .empty-note{padding:20px;text-align:center;color:var(--ink-soft);font-size:13.5px;}
+
+  .cal-card{padding:18px;}
+  .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .cal-nav h2{font-family:'Space Grotesk';font-size:19px;margin:0;}
+  .cal-nav .navbtns{display:flex;gap:6px;}
+  .icon-btn{
+    width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:#fff;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);
+  }
+  .icon-btn:hover{background:#F4F2EC;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .cal-dow{font-size:11px;font-weight:700;text-align:center;color:var(--ink-soft);padding-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+  .cal-cell{
+    position:relative;aspect-ratio:1/1;border-radius:10px;border:1px solid var(--line);
+    background:#fff;display:flex;flex-direction:column;padding:6px;cursor:default;
+    min-height:56px;
+  }
+  .cal-cell.pad{background:transparent;border-color:transparent;}
+  .cal-cell.has-orders{cursor:pointer;}
+  .cal-cell.has-orders:hover{border-color:var(--ink);}
+  .cal-cell.today{box-shadow:0 0 0 2px var(--ink) inset;}
+  .cal-cell .dnum{font-size:12.5px;font-weight:700;color:var(--ink-soft);}
+  .cal-cell.pending{background:var(--pending-bg);border-color:var(--pending-line);}
+  .cal-cell.pending .dnum{color:var(--pending);}
+  .cal-cell.complete{background:var(--complete-bg);border-color:var(--complete-line);}
+  .cal-cell.complete .dnum{color:var(--complete);}
+  .cal-badge{
+    margin-top:auto;font-family:'IBM Plex Mono';font-size:10.5px;font-weight:700;
+    padding:2px 6px;border-radius:6px;align-self:flex-start;
+  }
+  .cal-cell.pending .cal-badge{background:var(--pending);color:#fff;}
+  .cal-cell.complete .cal-badge{background:var(--complete);color:#fff;}
+
+  .legend{display:flex;gap:16px;margin-top:14px;font-size:12.5px;color:var(--ink-soft);flex-wrap:wrap;}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .legend .sw{width:10px;height:10px;border-radius:3px;}
+
+  .breadcrumb{display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:13px;color:var(--ink-soft);}
+  .breadcrumb button{background:none;border:none;color:var(--accent-dark);font-weight:700;cursor:pointer;padding:0;font-size:13px;}
+  .step-label{font-family:'Space Grotesk';font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-bottom:6px;}
+  .step-title{font-family:'Space Grotesk';font-size:20px;font-weight:700;margin:0 0 16px;}
+
+  .ticket-list{display:flex;flex-direction:column;gap:12px;}
+  .ticket{
+    position:relative;background:#fff;border:1px solid var(--line);border-radius:10px;
+    padding:16px 16px 16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;
+    border-left:5px solid var(--pending);transition:transform .1s ease;
+  }
+  .ticket.done{border-left-color:var(--complete);}
+  .ticket:hover{transform:translateX(2px);}
+  .ticket:focus-visible{outline:2px solid var(--focus);}
+  .ticket .tnum{font-family:'IBM Plex Mono';font-size:11px;color:var(--ink-soft);}
+  .ticket .tmain{flex:1;min-width:0;}
+  .ticket .ttype{font-weight:700;font-size:14.5px;}
+  .ticket .tnotes{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+  .ticket .tcases{font-family:'IBM Plex Mono';font-weight:700;font-size:18px;color:var(--ink);}
+  .ticket .tcases small{display:block;font-size:9.5px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;}
+  .status-chip{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;}
+  .status-chip.pending{background:var(--pending-bg);color:var(--pending);}
+  .status-chip.done{background:var(--complete-bg);color:var(--complete);}
+
+  .detail-card{padding:22px;}
+  .detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px;}
+  .detail-head .num{font-family:'IBM Plex Mono';color:var(--ink-soft);font-size:12.5px;}
+  .type-pill{
+    display:inline-block;background:#F4F2EC;color:var(--ink);font-weight:700;font-size:13px;
+    padding:5px 12px;border-radius:20px;margin-bottom:16px;
+  }
+  .need-box{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--pending-bg);border:1px dashed var(--pending-line);border-radius:10px;
+    padding:16px;margin-bottom:16px;
+  }
+  .need-box.done{background:var(--complete-bg);border-color:var(--complete-line);}
+  .need-box .lab{font-size:12.5px;color:var(--ink-soft);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+  .need-box .num-lg{font-family:'IBM Plex Mono';font-size:34px;font-weight:700;line-height:1;color:var(--ink);}
+  .order-notes{font-size:13.5px;color:var(--ink-soft);background:#F6F5EF;border-radius:9px;padding:10px 12px;margin-bottom:18px;}
+  .stepper{display:flex;align-items:center;gap:10px;}
+  .stepper button{
+    width:40px;height:40px;border-radius:9px;border:1px solid var(--line);background:#fff;
+    font-size:18px;font-weight:700;cursor:pointer;
+  }
+  .stepper button:hover{background:#F4F2EC;}
+  .stepper input{width:80px;text-align:center;font-size:18px;}
+  .divider{height:1px;background:var(--line);margin:18px 0;}
+  .completed-banner{
+    display:flex;align-items:center;gap:10px;background:var(--complete-bg);color:var(--complete);
+    border-radius:9px;padding:10px 14px;font-weight:700;font-size:13.5px;margin-bottom:16px;
+  }
+  .action-row{display:flex;gap:10px;flex-wrap:wrap;}
+
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;
+    font-size:13.5px;font-weight:600;box-shadow:var(--shadow);opacity:0;pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;z-index:50;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+
+  .loading-row{display:flex;align-items:center;gap:10px;color:var(--ink-soft);font-size:13.5px;padding:20px;}
+  .spinner{width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--complete);display:inline-block;margin-right:6px;}
+  .sync-note{font-size:11.5px;color:var(--ink-soft);display:flex;align-items:center;margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="mark">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C9 6 6 8 6 12a6 6 0 0012 0c0-4-3-6-6-10z" fill="#fff" opacity="0.95"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Thaw Cabinet Stocking</h1>
+        <p>Extra chicken case tracking</p>
+      </div>
+    </div>
+    <div class="tabs" role="tablist" aria-label="View switcher">
+      <button class="tab-btn active" id="tabStaffBtn" role="tab" aria-selected="true">Staff</button>
+      <button class="tab-btn" id="tabAdminBtn" role="tab" aria-selected="false">Admin</button>
+    </div>
+  </header>
+
+  <div id="loadingRow" class="loading-row"><div class="spinner"></div> Connecting…</div>
+
+  <!-- SETUP SCREEN (shown until firebaseConfig is filled in) -->
+  <div class="card setup-card" id="setupCard" style="display:none;">
+    <h2>One-time setup needed</h2>
+    <p>This app stores orders in Firebase so Admin can add them from anywhere. Paste your <code>firebaseConfig</code> object (from Firebase console → Project settings → Your apps) into the marked spot near the top of this file's <code>&lt;script&gt;</code> tag, then reload.</p>
+    <p style="color:var(--ink-soft);font-size:13px;">Look for the block starting with <code>const firebaseConfig = {</code> and replace the placeholder values.</p>
+  </div>
+
+  <div id="mainUI" style="display:none;">
+  <!-- ADMIN VIEW -->
+  <section class="view" id="viewAdmin">
+    <div class="admin-grid">
+      <div class="card admin-form">
+        <h2>Add extra cases</h2>
+        <form id="addOrderForm">
+          <label class="field">
+            <span>Date needed</span>
+            <input type="date" id="fDate" required>
+          </label>
+          <label class="field">
+            <span>Chicken type</span>
+            <select id="fType" required></select>
+          </label>
+          <label class="field">
+            <span>Extra cases</span>
+            <input type="number" id="fCases" min="1" step="1" value="1" required>
+          </label>
+          <label class="field">
+            <span>Notes for staff (optional)</span>
+            <textarea id="fNotes" placeholder="e.g. Split between both thaw cabinets"></textarea>
+          </label>
+          <button type="submit" class="btn btn-primary btn-block" id="addOrderBtn">Add to calendar</button>
+        </form>
+      </div>
+      <div class="card admin-list">
+        <h2>All orders</h2>
+        <div id="adminOrderList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STAFF VIEW: CALENDAR (Step 1 entry) -->
+  <section class="view active" id="viewCalendar">
+    <div class="card cal-card">
+      <div class="cal-nav">
+        <button class="icon-btn" id="prevMonthBtn" aria-label="Previous month">‹</button>
+        <h2 id="calMonthLabel"></h2>
+        <div class="navbtns">
+          <button class="btn btn-ghost" id="todayBtn" style="padding:8px 12px;font-size:12.5px;">Today</button>
+          <button class="icon-btn" id="nextMonthBtn" aria-label="Next month">›</button>
+        </div>
+      </div>
+      <div class="cal-grid" id="calDow"></div>
+      <div class="cal-grid" id="calGrid" style="margin-top:6px;"></div>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--pending);"></span> Needs stocking</span>
+        <span><span class="sw" style="background:var(--complete);"></span> Completed</span>
+      </div>
+      <div class="sync-note"><span class="sync-dot"></span> Live — updates automatically</div>
+    </div>
+  </section>
+
+  <!-- STEP 1: order list for a date -->
+  <section class="view" id="viewOrderList">
+    <div class="breadcrumb"><button id="backToCalBtn">← Calendar</button></div>
+    <div class="step-label">Step 1 · Select an order</div>
+    <h2 class="step-title" id="orderListDate"></h2>
+    <div class="ticket-list" id="ticketList"></div>
+  </section>
+
+  <!-- STEP 2 & 3: order detail -->
+  <section class="view" id="viewOrderDetail">
+    <div class="breadcrumb"><button id="backToListBtn">← Back to orders</button></div>
+    <div class="card detail-card">
+      <div id="completedBannerSlot"></div>
+      <div class="detail-head">
+        <div>
+          <div class="step-label" id="stepLabelDetail">Step 2 · Review &amp; stock</div>
+          <h2 class="step-title" style="margin-bottom:2px;" id="detailDateLabel"></h2>
+          <div class="num" id="detailOrderNum"></div>
+        </div>
+      </div>
+      <div class="type-pill" id="detailTypePill"></div>
+
+      <div class="need-box" id="needBox">
+        <div>
+          <div class="lab">Cases needed</div>
+          <div class="num-lg" id="needCasesNum">0</div>
+        </div>
+      </div>
+
+      <div class="order-notes" id="detailAdminNotes" style="display:none;"></div>
+
+      <div id="stockingControls">
+        <label class="field">
+          <span>Cases stocked</span>
+          <div class="stepper">
+            <button type="button" id="decStock" aria-label="Decrease">−</button>
+            <input type="number" id="stockedInput" min="0" step="1" value="0">
+            <button type="button" id="incStock" aria-label="Increase">+</button>
+          </div>
+        </label>
+        <label class="field">
+          <span>Notes (optional)</span>
+          <textarea id="staffNotesInput" placeholder="Anything worth flagging?"></textarea>
+        </label>
+      </div>
+
+      <div class="divider"></div>
+      <div class="action-row" id="detailActions"></div>
+    </div>
+  </section>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+
+  // ======================================================================
+  // PASTE YOUR FIREBASE CONFIG HERE (Firebase console -> Project settings
+  // -> Your apps -> the firebaseConfig object). Then reload the page.
+  // ======================================================================
+  const firebaseConfig = {
+    apiKey: "AIzaSyD-6QAh2D2YEiG0DfsdvgswK2VKqNYYT70",
+    authDomain: "ng-coop.firebaseapp.com",
+    projectId: "ng-coop",
+    storageBucket: "ng-coop.firebasestorage.app",
+    messagingSenderId: "285745994427",
+    appId: "1:285745994427:web:04997b6796dcdb2751679e"
+  };
+  // ======================================================================
+
+  const CHICKEN_TYPES = [
+    "Filet",
+    "Spicy",
+    "Strips",
+    "Nuggets",
+    "Grilled Filet",
+    "Grilled Nuggets",
+    "Breakfast Filet",
+    "Spicy Breakfast Filet"
+  ];
+
+  const isConfigured = firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY";
+
+  const $ = (id) => document.getElementById(id);
+
+  if(!isConfigured){
+    $('loadingRow').style.display = 'none';
+    $('setupCard').style.display = 'block';
+    return;
+  }
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const ordersRef = db.collection('orders');
+
+  let orders = [];
+  let currentYear, currentMonth; // 0-indexed month
+  let activeDateStr = null;
+  let activeOrderId = null;
+  let firstLoad = true;
+
+  function todayStr(){
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function fmtDateLong(dateStr){
+    const [y,m,d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, m-1, d);
+    return dt.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'});
+  }
+  function fmtDateShort(dateStr){
+    const [y,m,d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, m-1, d);
+    return dt.toLocaleDateString(undefined,{month:'short', day:'numeric', year:'numeric'});
+  }
+  function showToast(msg){
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(showToast._h);
+    showToast._h = setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  // ---------- POPULATE TYPE DROPDOWN ----------
+  const typeSelect = $('fType');
+  typeSelect.innerHTML = CHICKEN_TYPES.map(t=>`<option value="${t}">${t}</option>`).join('');
+
+  // ---------- TAB SWITCHING ----------
+  function setTab(tab){
+    const isStaff = tab === 'staff';
+    $('tabStaffBtn').classList.toggle('active', isStaff);
+    $('tabAdminBtn').classList.toggle('active', !isStaff);
+    $('tabStaffBtn').setAttribute('aria-selected', isStaff);
+    $('tabAdminBtn').setAttribute('aria-selected', !isStaff);
+    $('viewAdmin').classList.toggle('active', !isStaff);
+    if(isStaff){
+      showCalendar();
+    } else {
+      $('viewCalendar').classList.remove('active');
+      $('viewOrderList').classList.remove('active');
+      $('viewOrderDetail').classList.remove('active');
+      renderAdminList();
+    }
+  }
+  $('tabStaffBtn').addEventListener('click', ()=>setTab('staff'));
+  $('tabAdminBtn').addEventListener('click', ()=>setTab('admin'));
+
+  function showView(id){
+    ['viewCalendar','viewOrderList','viewOrderDetail'].forEach(v=>{
+      $(v).classList.toggle('active', v === id);
+    });
+  }
+
+  // ---------- ADMIN: ADD ----------
+  $('addOrderForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const date = $('fDate').value;
+    const type = $('fType').value;
+    const cases = parseInt($('fCases').value, 10);
+    const notes = $('fNotes').value.trim();
+    if(!date || !type || !cases || cases < 1) return;
+    const btn = $('addOrderBtn');
+    btn.disabled = true;
+    btn.textContent = 'Adding…';
+    try{
+      await ordersRef.add({
+        date,
+        type,
+        cases,
+        adminNotes: notes,
+        status: 'pending',
+        stockedCases: 0,
+        staffNotes: '',
+        createdAt: Date.now(),
+        completedAt: null
+      });
+      e.target.reset();
+      $('fCases').value = 1;
+      $('fDate').value = todayStr();
+      showToast('Order added to calendar.');
+    }catch(err){
+      showToast('Could not add order — check connection.');
+    }
+    btn.disabled = false;
+    btn.textContent = 'Add to calendar';
+  });
+
+  function renderAdminList(){
+    const list = $('adminOrderList');
+    if(orders.length === 0){
+      list.innerHTML = '<div class="empty-note">No orders yet. Add one on the left.</div>';
+      return;
+    }
+    const sorted = [...orders].sort((a,b)=> a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
+    list.innerHTML = sorted.map(o => `
+      <div class="order-row">
+        <span class="dot ${o.status === 'completed' ? 'complete' : 'pending'}"></span>
+        <div class="meta">
+          <div class="d">${fmtDateShort(o.date)}</div>
+          <div class="n">${o.adminNotes ? escapeHtml(o.adminNotes) : (o.status === 'completed' ? 'Completed' : 'Needs stocking')}</div>
+        </div>
+        <div class="cases">${o.cases}<small>${escapeHtml(o.type || '')}</small></div>
+        <button class="btn-danger-text" data-id="${o.id}">Remove</button>
+      </div>
+    `).join('');
+    list.querySelectorAll('.btn-danger-text').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const id = btn.getAttribute('data-id');
+        if(!confirm('Remove this order? This cannot be undone.')) return;
+        try{
+          await ordersRef.doc(id).delete();
+        }catch(err){
+          showToast('Could not remove order.');
+        }
+      });
+    });
+  }
+
+  // ---------- CALENDAR ----------
+  function showCalendar(){
+    showView('viewCalendar');
+    renderCalendar();
+  }
+  function ordersForDate(dateStr){
+    return orders.filter(o => o.date === dateStr);
+  }
+  function renderCalendar(){
+    const dowRow = $('calDow');
+    if(dowRow.children.length === 0){
+      ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d=>{
+        const el = document.createElement('div');
+        el.className = 'cal-dow';
+        el.textContent = d;
+        dowRow.appendChild(el);
+      });
+    }
+    const monthLabel = new Date(currentYear, currentMonth, 1)
+      .toLocaleDateString(undefined,{month:'long', year:'numeric'});
+    $('calMonthLabel').textContent = monthLabel;
+
+    const grid = $('calGrid');
+    grid.innerHTML = '';
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
+    const today = todayStr();
+
+    for(let i=0;i<firstDay;i++){
+      const pad = document.createElement('div');
+      pad.className = 'cal-cell pad';
+      grid.appendChild(pad);
+    }
+
+    for(let day=1; day<=daysInMonth; day++){
+      const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      const dayOrders = ordersForDate(dateStr);
+      const cell = document.createElement('div');
+      cell.className = 'cal-cell';
+      if(dateStr === today) cell.classList.add('today');
+
+      if(dayOrders.length > 0){
+        cell.classList.add('has-orders');
+        const allDone = dayOrders.every(o => o.status === 'completed');
+        cell.classList.add(allDone ? 'complete' : 'pending');
+        cell.innerHTML = `<div class="dnum">${day}</div><div class="cal-badge">${dayOrders.length} ${dayOrders.length===1?'order':'orders'}</div>`;
+        cell.setAttribute('tabindex','0');
+        cell.setAttribute('role','button');
+        cell.setAttribute('aria-label', `${fmtDateLong(dateStr)}, ${dayOrders.length} order(s), ${allDone ? 'completed' : 'needs stocking'}`);
+        cell.addEventListener('click', ()=>openOrderList(dateStr));
+        cell.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openOrderList(dateStr); }});
+      } else {
+        cell.innerHTML = `<div class="dnum">${day}</div>`;
+      }
+      grid.appendChild(cell);
+    }
+  }
+  $('prevMonthBtn').addEventListener('click', ()=>{
+    currentMonth--;
+    if(currentMonth < 0){ currentMonth = 11; currentYear--; }
+    renderCalendar();
+  });
+  $('nextMonthBtn').addEventListener('click', ()=>{
+    currentMonth++;
+    if(currentMonth > 11){ currentMonth = 0; currentYear++; }
+    renderCalendar();
+  });
+  $('todayBtn').addEventListener('click', ()=>{
+    const t = new Date();
+    currentYear = t.getFullYear();
+    currentMonth = t.getMonth();
+    renderCalendar();
+  });
+
+  // ---------- STEP 1: ORDER LIST ----------
+  function openOrderList(dateStr){
+    activeDateStr = dateStr;
+    renderOrderList();
+    showView('viewOrderList');
+  }
+  function renderOrderList(){
+    if(!activeDateStr) return;
+    $('orderListDate').textContent = fmtDateLong(activeDateStr);
+    const dayOrders = ordersForDate(activeDateStr).sort((a,b)=>a.createdAt-b.createdAt);
+    const list = $('ticketList');
+    list.innerHTML = dayOrders.map((o, idx) => `
+      <div class="ticket ${o.status === 'completed' ? 'done' : ''}" data-id="${o.id}" tabindex="0" role="button" aria-label="Order ${idx+1}, ${escapeHtml(o.type)}, ${o.cases} cases, ${o.status === 'completed' ? 'completed' : 'needs stocking'}">
+        <div>
+          <div class="tnum">ORDER #${String(idx+1).padStart(3,'0')}</div>
+          <div class="tmain">
+            <div class="ttype">${escapeHtml(o.type)}</div>
+            ${o.adminNotes ? `<div class="tnotes">${escapeHtml(o.adminNotes)}</div>` : ''}
+          </div>
+        </div>
+        <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+          <span class="status-chip ${o.status === 'completed' ? 'done' : 'pending'}">${o.status === 'completed' ? 'Completed' : 'Pending'}</span>
+          <div class="tcases">${o.cases}<small>cases</small></div>
+        </div>
+      </div>
+    `).join('') || '<div class="empty-note">No orders for this date.</div>';
+
+    list.querySelectorAll('.ticket').forEach(el=>{
+      const open = ()=>openOrderDetail(el.getAttribute('data-id'));
+      el.addEventListener('click', open);
+      el.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); open(); }});
+    });
+  }
+  $('backToCalBtn').addEventListener('click', showCalendar);
+
+  // ---------- STEP 2 & 3: ORDER DETAIL ----------
+  function openOrderDetail(orderId){
+    activeOrderId = orderId;
+    renderOrderDetail();
+    showView('viewOrderDetail');
+  }
+  function renderOrderDetail(){
+    const o = orders.find(x=>x.id === activeOrderId);
+    if(!o){ showCalendar(); return; }
+
+    const isDone = o.status === 'completed';
+    $('detailDateLabel').textContent = fmtDateLong(o.date);
+    const dayOrders = ordersForDate(o.date).sort((a,b)=>a.createdAt-b.createdAt);
+    const idx = dayOrders.findIndex(x=>x.id===o.id);
+    $('detailOrderNum').textContent = `ORDER #${String(idx+1).padStart(3,'0')}`;
+    $('detailTypePill').textContent = o.type;
+    $('stepLabelDetail').textContent = isDone ? 'Completed' : 'Step 2 · Review & stock';
+
+    $('needBox').className = 'need-box' + (isDone ? ' done' : '');
+    $('needCasesNum').textContent = o.cases;
+
+    if(o.adminNotes){
+      $('detailAdminNotes').style.display = 'block';
+      $('detailAdminNotes').textContent = o.adminNotes;
+    } else {
+      $('detailAdminNotes').style.display = 'none';
+    }
+
+    $('stockedInput').value = o.stockedCases || 0;
+    $('staffNotesInput').value = o.staffNotes || '';
+
+    const bannerSlot = $('completedBannerSlot');
+    if(isDone){
+      const when = o.completedAt ? new Date(o.completedAt).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '';
+      bannerSlot.innerHTML = `<div class="completed-banner">✓ Marked complete${when ? ' · ' + when : ''}</div>`;
+    } else {
+      bannerSlot.innerHTML = '';
+    }
+
+    $('stockingControls').style.opacity = isDone ? '0.6' : '1';
+    $('stockedInput').disabled = isDone;
+    $('staffNotesInput').disabled = isDone;
+    $('decStock').disabled = isDone;
+    $('incStock').disabled = isDone;
+
+    const actions = $('detailActions');
+    if(isDone){
+      actions.innerHTML = `<button class="btn btn-ghost" id="reopenBtn">Reopen order</button>`;
+      $('reopenBtn').addEventListener('click', async ()=>{
+        try{
+          await ordersRef.doc(o.id).update({ status: 'pending', completedAt: null });
+          showToast('Order reopened.');
+        }catch(err){ showToast('Could not update order.'); }
+      });
+    } else {
+      actions.innerHTML = `<button class="btn btn-primary" id="submitBtn">Step 3 · Mark complete &amp; submit</button>`;
+      $('submitBtn').addEventListener('click', async ()=>{
+        const btn = $('submitBtn');
+        btn.disabled = true;
+        btn.textContent = 'Submitting…';
+        try{
+          await ordersRef.doc(o.id).update({
+            stockedCases: parseInt($('stockedInput').value, 10) || 0,
+            staffNotes: $('staffNotesInput').value.trim(),
+            status: 'completed',
+            completedAt: Date.now()
+          });
+          showToast('Order marked complete.');
+        }catch(err){
+          showToast('Could not submit — check connection.');
+          btn.disabled = false;
+          btn.textContent = 'Step 3 · Mark complete & submit';
+        }
+      });
+    }
+  }
+  $('decStock').addEventListener('click', ()=>{
+    const inp = $('stockedInput');
+    inp.value = Math.max(0, (parseInt(inp.value,10)||0) - 1);
+  });
+  $('incStock').addEventListener('click', ()=>{
+    const inp = $('stockedInput');
+    inp.value = (parseInt(inp.value,10)||0) + 1;
+  });
+  $('backToListBtn').addEventListener('click', ()=>{
+    if(activeDateStr) openOrderList(activeDateStr);
+    else showCalendar();
+  });
+
+  // ---------- REALTIME REFRESH ----------
+  function refreshCurrentView(){
+    renderCalendar();
+    renderAdminList();
+    if($('viewOrderList').classList.contains('active')) renderOrderList();
+    if($('viewOrderDetail').classList.contains('active')) renderOrderDetail();
+  }
+
+  // ---------- INIT ----------
+  const t = new Date();
+  currentYear = t.getFullYear();
+  currentMonth = t.getMonth();
+  $('fDate').value = todayStr();
+
+  ordersRef.onSnapshot((snapshot)=>{
+    orders = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    if(firstLoad){
+      firstLoad = false;
+      $('loadingRow').style.display = 'none';
+      $('mainUI').style.display = 'block';
+    }
+    refreshCurrentView();
+  }, (err)=>{
+    $('loadingRow').innerHTML = 'Could not connect to Firebase. Check your config and Firestore rules.';
+  });
+
+})();
+</script>
+</body>
+</html>
