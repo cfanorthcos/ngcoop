@@ -25,6 +25,9 @@
     --complete:#2E9E5B;
     --complete-bg:#E7F6EC;
     --complete-line:#BFE6CE;
+    --overdue:#B91C3C;
+    --overdue-bg:#FBE1E6;
+    --overdue-line:#F0AEBB;
     --focus:#1F6FEB;
     --radius:16px;
     --shadow: 0 1px 2px rgba(36,28,24,0.05), 0 8px 24px rgba(36,28,24,0.07);
@@ -141,6 +144,11 @@
   .add-item-btn:hover{background:var(--accent-bg);border-color:var(--accent);}
 
   .admin-list{padding:22px;margin-top:0;}
+  .admin-list-header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+  .admin-list-header h2{margin:0;}
+  .mini-tabs{display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--line);padding:3px;border-radius:9px;}
+  .mini-tab{border:none;background:transparent;padding:6px 13px;border-radius:7px;font-size:12px;font-weight:700;color:var(--ink-soft);cursor:pointer;}
+  .mini-tab.active{background:var(--accent);color:#fff;}
   .order-row{
     display:flex;align-items:center;gap:12px;padding:13px 8px;border-bottom:1px solid var(--line);
   }
@@ -187,6 +195,10 @@
   }
   .cal-cell.pending .cal-badge{background:var(--pending);color:#fff;}
   .cal-cell.complete .cal-badge{background:var(--complete);color:#fff;}
+  .cal-cell.overdue{background:var(--overdue-bg);border-color:var(--overdue-line);}
+  .cal-cell.overdue .dnum{color:var(--overdue);}
+  .cal-cell.overdue .cal-badge{background:var(--overdue);color:#fff;}
+  .dot.overdue{background:var(--overdue);box-shadow:0 0 0 3px var(--overdue-bg);}
 
   .legend{display:flex;gap:16px;margin-top:14px;font-size:12.5px;color:var(--ink-soft);flex-wrap:wrap;}
   .legend span{display:inline-flex;align-items:center;gap:6px;}
@@ -207,6 +219,7 @@
     border-left:5px solid var(--pending);transition:transform .12s ease, border-color .12s ease;
   }
   .ticket.done{border-left-color:var(--complete);}
+  .ticket.overdue{border-left-color:var(--overdue);}
   .ticket:hover{transform:translateX(3px);}
   .ticket:focus-visible{outline:2px solid var(--focus);}
   .ticket .tmain{flex:1;min-width:0;}
@@ -218,6 +231,7 @@
   .status-chip{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;}
   .status-chip.pending{background:var(--pending-bg);color:var(--pending);}
   .status-chip.done{background:var(--complete-bg);color:var(--complete);}
+  .status-chip.overdue{background:var(--overdue-bg);color:var(--overdue);}
 
   .detail-card{padding:24px;}
   .detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px;}
@@ -241,6 +255,10 @@
   .divider{height:1px;background:var(--line);margin:20px 0;}
   .completed-banner{
     display:flex;align-items:center;gap:10px;background:var(--complete-bg);color:var(--complete);
+    border-radius:10px;padding:11px 15px;font-weight:700;font-size:13.5px;margin-bottom:16px;
+  }
+  .overdue-banner{
+    display:flex;align-items:center;gap:10px;background:var(--overdue-bg);color:var(--overdue);
     border-radius:10px;padding:11px 15px;font-weight:700;font-size:13.5px;margin-bottom:16px;
   }
   .action-row{display:flex;gap:10px;flex-wrap:wrap;}
@@ -334,7 +352,13 @@
         </form>
       </div>
       <div class="card admin-list">
-        <h2>All orders</h2>
+        <div class="admin-list-header">
+          <h2>All orders</h2>
+          <div class="mini-tabs">
+            <button class="mini-tab active" id="filterUpcomingBtn">Upcoming</button>
+            <button class="mini-tab" id="filterAllBtn">All</button>
+          </div>
+        </div>
         <div id="adminOrderList"></div>
       </div>
     </div>
@@ -354,6 +378,7 @@
       <div class="cal-grid" id="calGrid" style="margin-top:5px;"></div>
       <div class="legend">
         <span><span class="sw" style="background:var(--pending);"></span> Needs stocking</span>
+        <span><span class="sw" style="background:var(--overdue);"></span> Overdue</span>
         <span><span class="sw" style="background:var(--complete);"></span> Completed</span>
       </div>
       <div class="sync-note"><span class="sync-dot"></span> Live — updates automatically</div>
@@ -447,6 +472,7 @@
   let activeOrderId = null;
   let firstLoad = true;
   let itemRowSeq = 0;
+  let adminFilter = 'upcoming';
   const acknowledgedNotes = new Set();
 
   function todayStr(){
@@ -488,6 +514,9 @@
   function getOrderName(o, fallbackIdx){
     return (o.name && o.name.trim()) ? o.name.trim() : `Order ${fallbackIdx+1}`;
   }
+  function isOverdue(o){
+    return o.status !== 'completed' && o.date < todayStr();
+  }
 
   // ---------- ITEM ROWS (admin form) ----------
   function addItemRow(prefillType, prefillCases){
@@ -520,6 +549,19 @@
   }
   $('addItemBtn').addEventListener('click', ()=>addItemRow());
   resetItemRows();
+
+  $('filterUpcomingBtn').addEventListener('click', ()=>{
+    adminFilter = 'upcoming';
+    $('filterUpcomingBtn').classList.add('active');
+    $('filterAllBtn').classList.remove('active');
+    renderAdminList();
+  });
+  $('filterAllBtn').addEventListener('click', ()=>{
+    adminFilter = 'all';
+    $('filterAllBtn').classList.add('active');
+    $('filterUpcomingBtn').classList.remove('active');
+    renderAdminList();
+  });
 
   function setTab(tab){
     const isStaff = tab === 'staff';
@@ -602,24 +644,32 @@
 
   function renderAdminList(){
     const list = $('adminOrderList');
-    if(orders.length === 0){
-      list.innerHTML = '<div class="empty-note">No orders yet. Add one on the left.</div>';
+    let sourceOrders = orders;
+    if(adminFilter === 'upcoming'){
+      const today = todayStr();
+      sourceOrders = orders.filter(o => o.status !== 'completed' || o.date >= today);
+    }
+    if(sourceOrders.length === 0){
+      list.innerHTML = orders.length === 0
+        ? '<div class="empty-note">No orders yet. Add one on the left.</div>'
+        : '<div class="empty-note">No upcoming orders. Switch to "All" to see order history.</div>';
       return;
     }
-    const sorted = [...orders].sort((a,b)=> a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
+    const sorted = [...sourceOrders].sort((a,b)=> a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
     list.innerHTML = sorted.map((o, i) => {
       const items = getItems(o);
       const total = getTotalCases(o);
       const typeSummary = items.length === 1 ? items[0].type : `${items.length} types`;
       return `
       <div class="order-row">
-        <span class="dot ${o.status === 'completed' ? 'complete' : 'pending'}"></span>
+        <span class="dot ${o.status === 'completed' ? 'complete' : (isOverdue(o) ? 'overdue' : 'pending')}"></span>
         <div class="meta">
           <div class="d">${escapeHtml(getOrderName(o, i))} · ${fmtDateShort(o.date)}</div>
           <div class="n">${o.adminNotes ? escapeHtml(o.adminNotes) : (o.status === 'completed' ? 'Completed' : 'Needs stocking')}</div>
         </div>
         <div class="cases">${total}<small>${escapeHtml(typeSummary)}</small></div>
         <button class="btn-ghost btn-sm edit-order-btn" data-id="${o.id}">Edit</button>
+        <button class="btn-ghost btn-sm duplicate-order-btn" data-id="${o.id}">Duplicate</button>
         <button class="btn-danger-text" data-id="${o.id}">Remove</button>
       </div>
     `;}).join('');
@@ -638,6 +688,12 @@
       btn.addEventListener('click', ()=>{
         const o = orders.find(x=>x.id === btn.getAttribute('data-id'));
         if(o) startEdit(o);
+      });
+    });
+    list.querySelectorAll('.duplicate-order-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const o = orders.find(x=>x.id === btn.getAttribute('data-id'));
+        if(o) duplicateOrder(o);
       });
     });
   }
@@ -674,6 +730,27 @@
     $('editingBanner').style.display = 'none';
   }
   $('cancelEditBtn').addEventListener('click', cancelEdit);
+
+  function duplicateOrder(o){
+    editingOrderId = null;
+    $('fName').value = o.name || '';
+    const [y,m,d] = o.date.split('-').map(Number);
+    const nextDate = new Date(y, m-1, d+7);
+    $('fDate').value = `${nextDate.getFullYear()}-${String(nextDate.getMonth()+1).padStart(2,'0')}-${String(nextDate.getDate()).padStart(2,'0')}`;
+    $('fNotes').value = o.adminNotes || '';
+    $('itemRows').innerHTML = '';
+    const items = getItems(o);
+    if(items.length){
+      items.forEach(i => addItemRow(i.type, i.cases));
+    } else {
+      addItemRow();
+    }
+    $('formHeading').textContent = 'Add an order';
+    $('addOrderBtn').textContent = 'Add to calendar';
+    $('editingBanner').style.display = 'flex';
+    $('editingBannerText').textContent = `Duplicating "${getOrderName(o, 0)}" — pick a date, then add`;
+    $('addOrderForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   function showCalendar(){
     showView('viewCalendar');
@@ -718,11 +795,13 @@
       if(dayOrders.length > 0){
         cell.classList.add('has-orders');
         const allDone = dayOrders.every(o => o.status === 'completed');
-        cell.classList.add(allDone ? 'complete' : 'pending');
+        const anyOverdue = dayOrders.some(isOverdue);
+        const stateClass = allDone ? 'complete' : (anyOverdue ? 'overdue' : 'pending');
+        cell.classList.add(stateClass);
         cell.innerHTML = `<div class="dnum">${day}</div><div class="cal-badge">${dayOrders.length}</div>`;
         cell.setAttribute('tabindex','0');
         cell.setAttribute('role','button');
-        cell.setAttribute('aria-label', `${fmtDateLong(dateStr)}, ${dayOrders.length} order(s), ${allDone ? 'completed' : 'needs stocking'}`);
+        cell.setAttribute('aria-label', `${fmtDateLong(dateStr)}, ${dayOrders.length} order(s), ${allDone ? 'completed' : (anyOverdue ? 'overdue' : 'needs stocking')}`);
         cell.addEventListener('click', ()=>openOrderList(dateStr));
         cell.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openOrderList(dateStr); }});
       } else {
@@ -766,16 +845,19 @@
     list.innerHTML = dayOrders.map((o, idx) => {
       const items = getItems(o);
       const total = getTotalCases(o);
+      const overdue = isOverdue(o);
       const itemLines = items.map(i => `${i.cases} × ${escapeHtml(i.type)}`).join(' &nbsp;·&nbsp; ');
+      const chipClass = o.status === 'completed' ? 'done' : (overdue ? 'overdue' : 'pending');
+      const chipLabel = o.status === 'completed' ? 'Completed' : (overdue ? 'Overdue' : 'Pending');
       return `
-      <div class="ticket ${o.status === 'completed' ? 'done' : ''}" data-id="${o.id}" tabindex="0" role="button" aria-label="${escapeHtml(getOrderName(o, idx))}, ${total} cases, ${o.status === 'completed' ? 'completed' : 'needs stocking'}">
+      <div class="ticket ${o.status === 'completed' ? 'done' : ''} ${overdue ? 'overdue' : ''}" data-id="${o.id}" tabindex="0" role="button" aria-label="${escapeHtml(getOrderName(o, idx))}, ${total} cases, ${chipLabel}">
         <div class="tmain">
           <div class="ttype">${escapeHtml(getOrderName(o, idx))}</div>
           <div class="titems">${itemLines}</div>
           ${o.adminNotes ? `<div class="tnotes">${escapeHtml(o.adminNotes)}</div>` : ''}
         </div>
         <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
-          <span class="status-chip ${o.status === 'completed' ? 'done' : 'pending'}">${o.status === 'completed' ? 'Completed' : 'Pending'}</span>
+          <span class="status-chip ${chipClass}">${chipLabel}</span>
           <div class="tcases">${total}<small>cases</small></div>
         </div>
       </div>
@@ -886,6 +968,8 @@
     if(isDone){
       const when = o.completedAt ? new Date(o.completedAt).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '';
       bannerSlot.innerHTML = `<div class="completed-banner">✓ Marked complete${when ? ' · ' + when : ''}</div>`;
+    } else if(isOverdue(o)){
+      bannerSlot.innerHTML = `<div class="overdue-banner">⚠ This order was due ${fmtDateShort(o.date)} and is overdue</div>`;
     } else {
       bannerSlot.innerHTML = '';
     }
